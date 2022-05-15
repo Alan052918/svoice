@@ -63,7 +63,7 @@ class Solver(object):
         self.epochs = args.epochs
         self.max_norm = args.max_norm
         self.clip = args.clip
-        print("gradient clipping: ", args.clip)
+        print("gradient clipping: ", "True" if args.clip else "False")
 
         # Checkpoints
         self.continue_from = args.continue_from
