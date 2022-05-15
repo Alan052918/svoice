@@ -44,7 +44,7 @@ class Solver(object):
         self.dmodel = distrib.wrap(model)
         self.optimizer = optimizer
 
-        print(args.lr_sched)
+        print("LR scheduler: ", args.lr_sched)
         if args.lr_sched == "step":
             self.sched = StepLR(
                 self.optimizer, step_size=args.step.step_size, gamma=args.step.gamma
@@ -63,7 +63,7 @@ class Solver(object):
         self.epochs = args.epochs
         self.max_norm = args.max_norm
         self.clip = args.clip
-        print(args.clip)
+        print("gradient clipping: ", args.clip)
 
         # Checkpoints
         self.continue_from = args.continue_from
