@@ -49,12 +49,13 @@ batch_size: 4
 max_norm: 5
 # learning rate scheduling
 lr_sched: step # can be either step or plateau
-step: 
+step:
   step_size: 2
   gamma: 0.98
 plateau:
   factor: 0.5
   patience: 5
+clip: True
 
 # Models
 model: swave # either demucs or dwave

@@ -34,15 +34,15 @@ def run(args):
 
     if args.model == "swave":
         kwargs = dict(args.swave)
-        kwargs['sr'] = args.sample_rate
-        kwargs['segment'] = args.segment
+        kwargs["sr"] = args.sample_rate
+        kwargs["segment"] = args.segment
         model = SWave(**kwargs)
     else:
         logger.fatal("Invalid model name %s", args.model)
         os._exit(1)
 
     # requires a specific number of samples to avoid 0 padding during training
-    if hasattr(model, 'valid_length'):
+    if hasattr(model, "valid_length"):
         segment_len = int(args.segment * args.sample_rate)
         segment_len = model.valid_length(segment_len)
         args.segment = segment_len / args.sample_rate
@@ -50,10 +50,10 @@ def run(args):
     if args.show:
         logger.info(model)
         mb = sum(p.numel() for p in model.parameters()) * 4 / 2**20
-        logger.info('Size: %.1f MB', mb)
-        if hasattr(model, 'valid_length'):
+        logger.info("Size: %.1f MB", mb)
+        if hasattr(model, "valid_length"):
             field = model.valid_length(1)
-            logger.info('Field: %.1f ms', field / args.sample_rate * 1000)
+            logger.info("Field: %.1f ms", field / args.sample_rate * 1000)
         return
 
     assert args.batch_size % distrib.world_size == 0
@@ -61,19 +61,25 @@ def run(args):
 
     # Building datasets and loaders
     tr_dataset = Trainset(
-        args.dset.train, sample_rate=args.sample_rate, segment=args.segment, stride=args.stride, pad=args.pad)
+        args.dset.train,
+        sample_rate=args.sample_rate,
+        segment=args.segment,
+        stride=args.stride,
+        pad=args.pad,
+    )
     tr_loader = distrib.loader(
-        tr_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+        tr_dataset,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
+    )
 
     # batch_size=1 -> use less GPU memory to do cv
     cv_dataset = Validset(args.dset.valid)
     tt_dataset = Validset(args.dset.test)
-    cv_loader = distrib.loader(
-        cv_dataset, batch_size=1, num_workers=args.num_workers)
-    tt_loader = distrib.loader(
-        tt_dataset, batch_size=1, num_workers=args.num_workers)
-    data = {"tr_loader": tr_loader,
-            "cv_loader": cv_loader, "tt_loader": tt_loader}
+    cv_loader = distrib.loader(cv_dataset, batch_size=1, num_workers=args.num_workers)
+    tt_loader = distrib.loader(tt_dataset, batch_size=1, num_workers=args.num_workers)
+    data = {"tr_loader": tr_loader, "cv_loader": cv_loader, "tt_loader": tt_loader}
 
     # torch also initialize cuda seed if available
     torch.manual_seed(args.seed)
@@ -81,11 +87,20 @@ def run(args):
         model.cuda()
 
     # optimizer
-    if args.optim == "adam":
+    if args.optim == "adadelta":
+        optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
+    elif args.optim == "adagrad":
+        optimizer = torch.optim.Adagrad(model.parameters(), lr=args.lr)
+    elif args.optim == "adam":
         optimizer = torch.optim.Adam(
-            model.parameters(), lr=args.lr, betas=(0.9, args.beta2))
+            model.parameters(), lr=args.lr, betas=(0.9, args.beta2)
+        )
+    elif args.optim == "rmsprop":
+        optimizer = torch.optim.RMSprop(model.parameters(), lr=args.lr)
+    elif args.optim == "sgd":
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
     else:
-        logger.fatal('Invalid optimizer %s', args.optim)
+        logger.fatal("Invalid optimizer %s", args.optim)
         os._exit(1)
 
     # Construct Solver
@@ -112,7 +127,7 @@ def _main(args):
         run(args)
 
 
-@hydra.main(config_path="conf", config_name='config.yaml')
+@hydra.main(config_path="conf", config_name="config.yaml")
 def main(args):
     try:
         _main(args)
