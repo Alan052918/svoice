@@ -43,6 +43,8 @@ class Solver(object):
         self.model = model
         self.dmodel = distrib.wrap(model)
         self.optimizer = optimizer
+
+        print(args.lr_sched)
         if args.lr_sched == "step":
             self.sched = StepLR(
                 self.optimizer, step_size=args.step.step_size, gamma=args.step.gamma
@@ -61,6 +63,7 @@ class Solver(object):
         self.epochs = args.epochs
         self.max_norm = args.max_norm
         self.clip = args.clip
+        print(args.clip)
 
         # Checkpoints
         self.continue_from = args.continue_from

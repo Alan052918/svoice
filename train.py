@@ -87,6 +87,7 @@ def run(args):
         model.cuda()
 
     # optimizer
+    print(args.optim)
     if args.optim == "adadelta":
         optimizer = torch.optim.Adadelta(model.parameters(), lr=args.lr)
     elif args.optim == "adagrad":
