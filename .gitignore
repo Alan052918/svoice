@@ -134,3 +134,6 @@ models/
 outputs/
 egs
 *.sh
+
+# Junda
+.vscode
